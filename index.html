@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light">
+  <meta name="referrer" content="no-referrer">
+  <title>Netflix OTP Center</title>
+  <link rel="stylesheet" href="./styles.css?v=responsive-v9">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+</head>
+<body>
+  <div class="ambient-bg" aria-hidden="true">
+    <span class="ambient-orb orb-one"></span>
+    <span class="ambient-orb orb-two"></span>
+    <span class="ambient-grid"></span>
+  </div>
+  <main class="shell">
+    <section class="panel" aria-labelledby="page-title">
+      <div class="brand-row">
+        <div class="brand-mark" aria-hidden="true">N</div>
+        <div>
+          <p class="eyebrow">OTP CENTER</p>
+          <h1 id="page-title">ค้นหาข้อความ Netflix Netflix</h1>
+        </div>
+        <div class="bot-actions">
+          <span class="online-pill">BOT ONLINE</span>
+          <button id="accountsBtn" class="accounts-btn accounts-btn-medium" type="button">
+            <span class="accounts-btn-icon" aria-hidden="true">✓</span>
+            <span class="accounts-btn-copy">
+              <strong>ดูอีเมลที่รองรับ</strong>
+              <small id="accountsMiniCount">กำลังโหลด...</small>
+            </span>
+          </button>
+        </div>
+      </div>
+
+      <p class="lead">กรอกอีเมลที่อยู่ในระบบ แล้วบอทจะค้นหาข้อความ Netflix Netflix ล่าสุดให้โดยอัตโนมัติ</p>
+
+      <div class="service-strip" aria-label="ประเภทข้อความที่รองรับ">
+        <span><i></i> OTP</span>
+        <span><i></i> รีเซ็ตรหัสผ่าน</span>
+        <span><i></i> รับชมชั่วคราว</span>
+        <span><i></i> อัปเดตครัวเรือน</span>
+      </div>
+
+      <form id="searchForm" class="search-form" autocomplete="off" novalidate>
+        <label for="emailInput">อีเมล</label>
+        <div class="input-wrap">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5h16a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2Zm0 2 8 5 8-5"/></svg>
+          <input id="emailInput" name="email" type="email" inputmode="email" placeholder="name@example.com" maxlength="254" required>
+        </div>
+        <button id="searchBtn" class="primary-btn" type="submit">
+          <i class="button-sheen" aria-hidden="true"></i>
+          <span>ค้นหาข้อความ Netflix</span>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m21 21-4.4-4.4M19 11a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z"/></svg>
+        </button>
+</form>
+
+      <div id="notice" class="notice hidden" role="status" aria-live="polite"></div>
+
+      <section id="loadingCard" class="state-card hidden" aria-live="polite">
+        <div class="loader-ring" aria-hidden="true"><span></span></div>
+        <div class="loading-copy">
+          <div class="state-title-row">
+            <h2 id="loadingTitle">กำลังค้นหาข้อความ Netflix...</h2>
+            <strong id="countdown">60s</strong>
+          </div>
+          <p id="loadingText">กำลังตรวจสอบกล่องจดหมาย กรุณารอสักครู่ หากไม่ต้องการค้นหาต่อสามารถยกเลิกได้ทันที</p>
+          <div class="progress-track"><div id="progressBar" class="progress-bar"></div></div>
+          <button id="cancelSearchBtn" class="cancel-btn" type="button">ยกเลิกการค้นหา</button>
+        </div>
+      </section>
+
+      <section id="resultCard" class="result-card hidden" aria-live="polite">
+        <div class="result-icon" aria-hidden="true">✓</div>
+        <p class="eyebrow success">FOUND</p>
+        <h2 id="resultTitle">พบข้อความแล้ว</h2>
+        <p id="resultTime" class="muted"></p>
+
+        <div id="codeBox" class="code-box hidden">
+          <span>รหัสของคุณ</span>
+          <strong id="otpCode">000000</strong>
+          <button id="copyCodeBtn" type="button" class="secondary-btn">คัดลอกรหัส</button>
+        </div>
+
+        <div id="linkBox" class="link-box hidden">
+          <div class="link-display-head">
+            <span>ลิงก์ที่ได้รับ</span>
+            <button id="toggleFullLinkBtn" class="link-toggle-btn" type="button" aria-expanded="false">ดู URL เต็ม</button>
+          </div>
+          <div class="link-preview-shell">
+            <p id="linkPreview" class="link-preview-short"></p>
+            <p id="fullLinkPreview" class="link-preview-full hidden"></p>
+          </div>
+          <div class="button-row">
+            <a id="openLinkBtn" class="primary-btn compact" href="#" target="_blank" rel="noopener noreferrer">เปิดลิงก์</a>
+            <button id="copyLinkBtn" type="button" class="secondary-btn compact">คัดลอก URL เต็ม</button>
+          </div>
+        </div>
+
+        <button id="newSearchBtn" class="text-btn" type="button">ค้นหาอีเมลอื่น</button>
+      </section>
+
+      <footer>
+        <div id="statusDot" class="status-dot"></div>
+        <span id="footerStatus">กำลังตรวจสอบบอท...</span>
+      </footer>
+    </section>
+  </main>
+
+
+  <section id="accountsModal" class="accounts-modal hidden" role="dialog" aria-modal="true" aria-labelledby="accountsModalTitle">
+    <button id="accountsBackdrop" class="accounts-backdrop" type="button" aria-label="ปิด"></button>
+    <div class="accounts-modal-card">
+      <header class="accounts-modal-head">
+        <div>
+          <p class="eyebrow">BOT HEALTH</p>
+          <h2 id="accountsModalTitle">อีเมลที่รองรับ</h2>
+          <p id="accountsCheckedAt" class="accounts-checked">กำลังอัปเดตสถานะล่าสุด...</p>
+        </div>
+        <button id="closeAccountsBtn" class="modal-close" type="button" aria-label="ปิด">×</button>
+      </header>
+
+      <div class="flow-support">
+        <span>OTP</span>
+        <span>รีเซ็ตรหัสผ่าน</span>
+        <span>รับชมชั่วคราว</span>
+        <span>อัปเดตครัวเรือน</span>
+      </div>
+
+      <div id="accountsHealthSummary" class="accounts-health-summary">
+        <div><strong id="readyCount">—</strong><span>พร้อมใช้</span></div>
+        <div><strong id="errorCount">—</strong><span>มีปัญหา</span></div>
+        <div><strong id="totalCount">—</strong><span>ทั้งหมด</span></div>
+      </div>
+
+      <div class="accounts-search-wrap">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m21 21-4.4-4.4M19 11a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z"/></svg>
+        <input id="accountsSearchInput" type="search" inputmode="email" autocomplete="off" placeholder="ค้นหาอีเมล..." aria-label="ค้นหาอีเมลที่รองรับ">
+        <button id="clearAccountsSearchBtn" class="accounts-search-clear hidden" type="button" aria-label="ล้างการค้นหา">×</button>
+      </div>
+      <p id="accountsSearchResult" class="accounts-search-result hidden"></p>
+
+      <div id="accountsList" class="accounts-list">
+        <div class="accounts-loading">กำลังโหลดสถานะบัญชี...</div>
+      </div>
+
+      <button id="refreshAccountsBtn" class="secondary-btn full accounts-refresh" type="button">อัปเดตสถานะล่าสุด</button>
+      <p class="accounts-note">สถานะ IMAP จะตรวจอัตโนมัติเมื่อเปิดบอท และตรวจซ้ำเป็นระยะ โดยหน้าเว็บจะไม่เห็น App Password</p>
+    </div>
+  </section>
+
+  <section id="botOffline">
+    <div class="offline-card">
+      <div class="offline-icon">⚠️</div>
+      <h2>ขณะนี้บอทไม่ทำงาน</h2>
+      <p>ระบบยังไม่พร้อมให้บริการในขณะนี้ โปรดติดต่อทีมงาน หรือลองใหม่อีกครั้งภายหลัง</p>
+      <div class="offline-status"><span class="offline-pulse"></span><span id="offlineStatusText">กำลังตรวจสอบสถานะบอท...</span></div>
+      <button id="offlineRetryBtn" class="offline-retry" type="button">ตรวจสอบอีกครั้ง</button>
+    </div>
+  </section>
+
+  <script src="./config.js?v=responsive-v9"></script>
+  <script src="./app.js?v=responsive-v9" defer></script>
+</body>
+</html>
