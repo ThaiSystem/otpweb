@@ -1,7 +1,7 @@
 (() => {
   const cfg = window.JOKEMOO_CONFIG || {};
   const PROJECT_ID = String(cfg.projectId || "").trim();
-  const SEARCH_SECONDS = Number(cfg.searchSeconds || 60);
+  const SEARCH_SECONDS = Number(cfg.searchSeconds || 25);
   const OFFLINE_AFTER_MS = Number(cfg.offlineAfterMs || 30000);
   const STATUS_CHECK_MS = Number(cfg.statusCheckMs || 10000);
   const REQUEST_POLL_MS = Number(cfg.requestPollMs || 1000);
@@ -54,16 +54,23 @@
   const accountsSearchInput = $("accountsSearchInput");
   const clearAccountsSearchBtn = $("clearAccountsSearchBtn");
   const accountsSearchResult = $("accountsSearchResult");
+  const copyAllAccountsBtn = $("copyAllAccountsBtn");
+  const copyAllAccountsText = $("copyAllAccountsText");
 
   let activeRequestId = null;
+  let cuteRealtimeTimer = null;
+  const CUTE_REALTIME_REFRESH_MS = 15000;
   let requestStartedAt = 0;
   let requestTimer = null;
   let countdownTimer = null;
   let botOnline = false;
+  let firestoreQuotaCooldownUntil = 0;
+  const FIRESTORE_QUOTA_COOLDOWN_MS = 10 * 60 * 1000;
   let searchSerial = 0;
   const cancelledRequestIds = new Set();
   let latestAccountCount = 0;
   let accountHealthRows = [];
+  let visibleAccountRows = [];
   let accountRealtimeTimer = null;
   const ACCOUNT_REALTIME_REFRESH_MS = 12000;
 
@@ -137,7 +144,9 @@
       try { data = await res.json(); } catch (_) {}
       if (!res.ok) {
         const message = data?.error?.message || `HTTP ${res.status}`;
-        throw new Error(message);
+        const err = new Error(message);
+        err.status = res.status;
+        throw err;
       }
       return data;
     } finally {
@@ -168,23 +177,94 @@
   }
 
   async function checkBotStatus() {
-    try {
-      const doc = await fetchJson(`${STATUS_URL}?t=${Date.now()}`, {}, 5000);
-      const data = decodeFields(doc.fields || {});
-      const heartbeatMs = normalizeTimestamp(data.heartbeat);
-      const age = heartbeatMs ? Date.now() - heartbeatMs : Infinity;
-      const fresh = age >= -120000 && age <= OFFLINE_AFTER_MS;
+    if (
+      Date.now()
+      < firestoreQuotaCooldownUntil
+    ) {
+      const minutes = Math.max(
+        1,
+        Math.ceil(
+          (
+            firestoreQuotaCooldownUntil
+            - Date.now()
+          ) / 60000
+        )
+      );
 
-      if (data.online === true && fresh) {
-        showBotOnline(Number(data.accountCount));
+      showBotOffline(
+        `Firestore quota เต็ม · พักการตรวจอีก ${minutes} นาที`
+      );
+
+      return false;
+    }
+
+    try {
+      const doc = await fetchJson(
+        `${STATUS_URL}?t=${Date.now()}`,
+        {},
+        5000
+      );
+
+      const data = decodeFields(
+        doc.fields || {}
+      );
+
+      const heartbeatMs =
+        normalizeTimestamp(
+          data.heartbeat
+        );
+
+      const age = heartbeatMs
+        ? Date.now() - heartbeatMs
+        : Infinity;
+
+      const fresh =
+        age >= -120000
+        && age <= OFFLINE_AFTER_MS;
+
+      if (
+        data.online === true
+        && fresh
+      ) {
+        showBotOnline(
+          Number(data.accountCount)
+        );
         return true;
       }
 
-      showBotOffline("บอทไม่ได้ส่งสัญญาณล่าสุด โปรดติดต่อทีมงาน");
+      showBotOffline(
+        "บอทไม่ได้ส่งสัญญาณล่าสุด โปรดติดต่อทีมงาน"
+      );
+
       return false;
+
     } catch (err) {
-      console.error("BOT STATUS ERROR", err);
-      showBotOffline("ไม่สามารถเชื่อมต่อระบบสถานะบอทได้");
+      if (
+        err?.status === 429
+        || /quota exceeded/i.test(
+          String(err?.message || "")
+        )
+      ) {
+        firestoreQuotaCooldownUntil =
+          Date.now()
+          + FIRESTORE_QUOTA_COOLDOWN_MS;
+
+        showBotOffline(
+          "Firestore quota เต็มชั่วคราว · ระบบพักการตรวจ 10 นาที"
+        );
+
+        return false;
+      }
+
+      console.error(
+        "BOT STATUS ERROR",
+        err
+      );
+
+      showBotOffline(
+        "ไม่สามารถเชื่อมต่อระบบสถานะบอทได้"
+      );
+
       return false;
     }
   }
@@ -205,14 +285,16 @@
   }
 
   function accountStatusClass(row) {
+    if (row?.status === "supported") return "ready";
     if (row?.status === "checking" || row?.status === "reconnecting") return "checking";
     return row?.ok === true ? "ready" : "error";
   }
 
   function accountStatusLabel(row) {
+    if (row?.status === "supported") return "รองรับ";
     if (row?.status === "checking") return "กำลังตรวจ";
     if (row?.status === "reconnecting") return "กำลังต่อใหม่";
-    return row?.ok === true ? "เรียลไทม์" : "มีปัญหา";
+    return row?.ok === true ? "พร้อมใช้" : "มีปัญหา";
   }
 
 
@@ -261,6 +343,45 @@
     });
   }
 
+  async function copyTextSafe(text) {
+    const value = String(text || "");
+    if (!value) return false;
+
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(value);
+        return true;
+      }
+    } catch (_) {}
+
+    try {
+      const textarea = document.createElement("textarea");
+      textarea.value = value;
+      textarea.setAttribute("readonly", "");
+      textarea.style.position = "fixed";
+      textarea.style.opacity = "0";
+      document.body.appendChild(textarea);
+      textarea.select();
+      const ok = document.execCommand("copy");
+      textarea.remove();
+      return ok;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  function updateCopyAllButton(rows) {
+    if (!copyAllAccountsBtn || !copyAllAccountsText) return;
+
+    const count = Array.isArray(rows) ? rows.length : 0;
+    const hasQuery = String(accountsSearchInput?.value || "").trim().length > 0;
+
+    copyAllAccountsBtn.disabled = count === 0;
+    copyAllAccountsText.textContent = hasQuery
+      ? `คัดลอกผลค้นหา (${count})`
+      : `คัดลอกอีเมลทั้งหมด (${count})`;
+  }
+
   function renderFilteredAccounts() {
     const query = String(accountsSearchInput?.value || "").trim().toLowerCase();
 
@@ -271,6 +392,9 @@
           String(row?.message || "").toLowerCase().includes(query) ||
           String(accountStatusLabel(row)).toLowerCase().includes(query)
         );
+
+    visibleAccountRows = filtered.slice();
+    updateCopyAllButton(visibleAccountRows);
 
     clearAccountsSearchBtn?.classList.toggle("hidden", !query);
 
@@ -297,13 +421,26 @@
       const label = accountStatusLabel(row);
       const message = String(row?.message || (row?.ok ? "พร้อมใช้งาน" : "ตรวจสอบการตั้งค่า"));
       const email = String(row?.email || "—");
-      const lastMailText = formatLastMailAt(row?.lastMailAt);
+      const lastMailText = row?.status === "supported"
+        ? "ตรวจเมลเมื่อกดค้นหา"
+        : formatLastMailAt(row?.lastMailAt);
 
       return `
         <div class="account-health-row ${cls}">
           <span class="account-health-dot" aria-hidden="true"></span>
           <div class="account-health-copy">
-            <strong>${escapeHtml(email)}</strong>
+            <div class="account-email-line">
+              <strong>${escapeHtml(email)}</strong>
+              <button
+                class="account-copy-btn"
+                type="button"
+                data-email="${escapeHtml(email)}"
+                aria-label="คัดลอก ${escapeHtml(email)}"
+              >
+                <span aria-hidden="true">⧉</span>
+                <span>คัดลอก</span>
+              </button>
+            </div>
             <div class="account-health-meta">
               <span class="account-health-message">${escapeHtml(message)}</span>
               <span class="account-health-lastmail">${escapeHtml(lastMailText)}</span>
@@ -315,36 +452,62 @@
   }
 
   function renderAccountHealth(data) {
-    const rows = Array.isArray(data?.accounts) ? data.accounts.slice() : [];
+    const rows = Array.isArray(data?.accounts)
+      ? data.accounts.slice()
+      : [];
+
     accountHealthRows = sortAccountRows(rows);
 
-    const ready = rows.filter(row => row?.ok === true).length;
-    const checking = rows.filter(row => row?.status === "checking").length;
-    const error = Math.max(0, rows.length - ready - checking);
+    const supported = rows.filter(
+      row =>
+        row?.status === "supported"
+        || row?.ok === true
+    ).length;
 
-    readyCount.textContent = String(ready);
-    errorCount.textContent = String(error);
-    totalCount.textContent = String(rows.length || data?.accountCount || latestAccountCount || 0);
+    readyCount.textContent =
+      String(supported);
 
-    const checkedText = data?.checking
-      ? "บอทกำลังดึงสถานะและเวลาเมลล่าสุดของทุกบัญชี..."
-      : formatCheckedAt(data?.checkedAt || data?.updatedAt);
-    accountsCheckedAt.textContent = checkedText;
+    errorCount.textContent = "0";
+
+    totalCount.textContent =
+      String(
+        rows.length
+        || data?.accountCount
+        || latestAccountCount
+        || 0
+      );
+
+    if (data?.onDemand === true) {
+      accountsCheckedAt.textContent =
+        "● ON-DEMAND · จะตรวจเมลเมื่อมีคนกดค้นหา";
+      accountsCheckedAt.classList.add("live");
+    } else {
+      accountsCheckedAt.textContent =
+        formatCheckedAt(
+          data?.checkedAt
+          || data?.updatedAt
+        );
+      accountsCheckedAt.classList.remove("live");
+    }
 
     if (accountsMiniCount) {
-      const total = rows.length || data?.accountCount || latestAccountCount || 0;
-      if (rows.length) {
-        accountsMiniCount.textContent = `${ready}/${total} พร้อมใช้${error ? ` · ${error} เออเร่อ` : ""}`;
-      } else if (total) {
-        accountsMiniCount.textContent = `${total} บัญชี · กำลังตรวจ`;
-      }
+      const total =
+        rows.length
+        || data?.accountCount
+        || latestAccountCount
+        || 0;
+
+      accountsMiniCount.textContent =
+        total
+          ? `${total} บัญชี · พร้อมค้นหา`
+          : "กำลังโหลด...";
     }
 
     if (!rows.length) {
       accountHealthRows = [];
       accountsList.innerHTML = `
         <div class="accounts-empty">
-          ${data?.checking ? "กำลังดึงสถานะและเวลาเมลล่าสุดของทุกบัญชี..." : "ยังไม่มีข้อมูลสถานะบัญชี"}
+          ยังไม่มีรายการอีเมลที่รองรับ
         </div>`;
       return;
     }
@@ -373,12 +536,10 @@
       const data = decodeFields(doc.fields || {});
       renderAccountHealth(data);
 
-      if (data?.realtime === true) {
-        const seconds = Number(data?.pollSeconds || 5);
-        accountsCheckedAt.textContent = `● LIVE · บอทตรวจกล่องเมลทุกประมาณ ${seconds} วินาที`;
+      if (data?.onDemand === true) {
+        accountsCheckedAt.textContent =
+          "● ON-DEMAND · จะตรวจเมลเมื่อมีคนกดค้นหา";
         accountsCheckedAt.classList.add("live");
-      } else {
-        accountsCheckedAt.classList.remove("live");
       }
     } catch (err) {
       console.error("ACCOUNT HEALTH ERROR", err);
@@ -397,7 +558,7 @@
     } finally {
       if (!silent) {
         refreshAccountsBtn.disabled = false;
-        refreshAccountsBtn.textContent = "โหลดสถานะล่าสุด";
+        refreshAccountsBtn.textContent = "โหลดรายการอีกครั้ง";
       }
     }
   }
@@ -405,17 +566,23 @@
   function startAccountRealtime() {
     stopAccountRealtime();
     loadAccountHealth(false);
-    accountRealtimeTimer = setInterval(() => {
-      if (!accountsModal.classList.contains("hidden")) {
-        loadAccountHealth(true);
-      }
-    }, ACCOUNT_REALTIME_REFRESH_MS);
   }
 
   function stopAccountRealtime() {
     if (accountRealtimeTimer) {
       clearInterval(accountRealtimeTimer);
       accountRealtimeTimer = null;
+    }
+  }
+
+  function startCuteRealtime() {
+    stopCuteRealtime();
+  }
+
+  function stopCuteRealtime() {
+    if (cuteRealtimeTimer) {
+      clearInterval(cuteRealtimeTimer);
+      cuteRealtimeTimer = null;
     }
   }
 
@@ -433,6 +600,7 @@
 
   function closeAccountsModal() {
     stopAccountRealtime();
+    stopCuteRealtime();
     accountsModal.classList.add("hidden");
     document.documentElement.classList.remove("modal-open");
   }
@@ -505,7 +673,19 @@
     }, 6000);
   }
 
+  function renderNotFound(message = "ไม่พบ OTP") {
+    hide(loadingCard);
+    hide(codeBox);
+    hide(linkBox);
+    show(resultCard);
+
+    resultCard.classList.add("not-found");
+    resultTitle.textContent = "ไม่พบ OTP";
+    resultTime.textContent = message || "ไม่พบ OTP หรือปุ่มอาจถูกใช้งานไปแล้ว";
+  }
+
   function renderResult(result) {
+    resultCard.classList.remove("not-found");
     hide(loadingCard);
     show(resultCard);
     hide(codeBox);
@@ -623,9 +803,11 @@
         return;
       }
 
-      if (status === "timeout") {
-        hide(loadingCard);
-        setNotice(data.message || "ยังไม่พบข้อความ Netflix ภายในเวลาที่กำหนด");
+      if (status === "not_found" || status === "timeout") {
+        renderNotFound(
+          data.message || "ไม่พบ OTP หรือปุ่มอาจถูกใช้งานไปแล้ว กรุณาขอใหม่อีกครั้ง"
+        );
+        setNotice("");
         completeSearch();
         return;
       }
@@ -772,6 +954,55 @@
     }
   });
 
+
+  accountsList?.addEventListener("click", async event => {
+    const button = event.target.closest(".account-copy-btn");
+    if (!button) return;
+
+    const email = button.dataset.email || "";
+    const label = button.querySelector("span:last-child");
+    const ok = await copyTextSafe(email);
+
+    if (!ok) {
+      if (label) label.textContent = "คัดลอกไม่ได้";
+      setTimeout(() => {
+        if (label) label.textContent = "คัดลอก";
+      }, 1200);
+      return;
+    }
+
+    button.classList.add("copied");
+    if (label) label.textContent = "คัดลอกแล้ว";
+
+    setTimeout(() => {
+      button.classList.remove("copied");
+      if (label) label.textContent = "คัดลอก";
+    }, 1200);
+  });
+
+  copyAllAccountsBtn?.addEventListener("click", async () => {
+    const emails = visibleAccountRows
+      .map(row => String(row?.email || "").trim())
+      .filter(Boolean);
+
+    if (!emails.length) return;
+
+    const ok = await copyTextSafe(emails.join("\n"));
+
+    if (!ok) {
+      copyAllAccountsText.textContent = "คัดลอกไม่สำเร็จ";
+      setTimeout(() => updateCopyAllButton(visibleAccountRows), 1200);
+      return;
+    }
+
+    copyAllAccountsBtn.classList.add("copied");
+    copyAllAccountsText.textContent = `คัดลอกแล้ว ${emails.length} อีเมล`;
+
+    setTimeout(() => {
+      copyAllAccountsBtn.classList.remove("copied");
+      updateCopyAllButton(visibleAccountRows);
+    }, 1300);
+  });
 
   accountsSearchInput?.addEventListener("input", renderFilteredAccounts);
   clearAccountsSearchBtn?.addEventListener("click", () => {

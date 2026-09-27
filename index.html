@@ -6,7 +6,7 @@
   <meta name="color-scheme" content="light">
   <meta name="referrer" content="no-referrer">
   <title>Netflix OTP Center</title>
-  <link rel="stylesheet" href="./styles.css?v=responsive-v9">
+  <link rel="stylesheet" href="./styles.css?v=on-demand-v14">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -32,14 +32,14 @@
           <button id="accountsBtn" class="accounts-btn accounts-btn-medium" type="button">
             <span class="accounts-btn-icon" aria-hidden="true">✓</span>
             <span class="accounts-btn-copy">
-              <strong>ดูอีเมลที่บอทรองรับ</strong>
+              <strong>ดูอีเมลที่รองรับ</strong>
               <small id="accountsMiniCount">กำลังโหลด...</small>
             </span>
           </button>
         </div>
       </div>
 
-      <p class="lead">กรอกอีเมลที่อยู่ในระบบ แล้วบอทจะค้นหาข้อความ Netflix Netflix ล่าสุดให้โดยอัตโนมัติ ภายใน 5 วิ</p>
+      <p class="lead">กรอกอีเมลที่อยู่ในระบบ แล้วบอทจะค้นหาข้อความ Netflix ล่าสุดให้โดยอัตโนมัติ ภายใน 5 วิ</p>
 
       <form id="searchForm" class="search-form" autocomplete="off" novalidate>
         <label for="emailInput">อีเมล</label>
@@ -61,9 +61,9 @@
         <div class="loading-copy">
           <div class="state-title-row">
             <h2 id="loadingTitle">กำลังค้นหาข้อความ Netflix...</h2>
-            <strong id="countdown">60s</strong>
+            <strong id="countdown">25s</strong>
           </div>
-          <p id="loadingText">กำลังตรวจสอบกล่องจดหมาย กรุณารอสักครู่ หากไม่ต้องการค้นหาต่อสามารถยกเลิกได้ทันที</p>
+          <p id="loadingText">กำลังเชื่อมต่ออีเมลนี้และรอข้อความ Netflix ใหม่สูงสุด 25 วินาที หากไม่ต้องการค้นหาต่อสามารถยกเลิกได้ทันที</p>
           <div class="progress-track"><div id="progressBar" class="progress-bar"></div></div>
           <button id="cancelSearchBtn" class="cancel-btn" type="button">ยกเลิกการค้นหา</button>
         </div>
@@ -92,7 +92,7 @@
           </div>
           <div class="button-row">
             <a id="openLinkBtn" class="primary-btn compact" href="#" target="_blank" rel="noopener noreferrer">เปิดลิงก์</a>
-            <button id="copyLinkBtn" type="button" class="secondary-btn compact">คัดลอก URL</button>
+            <button id="copyLinkBtn" type="button" class="secondary-btn compact">คัดลอก URL เต็ม</button>
           </div>
         </div>
 
@@ -112,16 +112,16 @@
     <div class="accounts-modal-card">
       <header class="accounts-modal-head">
         <div>
-          <p class="eyebrow">BOT HEALTH</p>
-          <h2 id="accountsModalTitle">อีเมลที่รองรับ</h2>
-          <p id="accountsCheckedAt" class="accounts-checked">กำลังอัปเดตสถานะล่าสุด...</p>
+          <p class="eyebrow">SUPPORTED EMAILS</p>
+          <h2 id="accountsModalTitle">อีเมลที่บอทรองรับ</h2>
+          <p id="accountsCheckedAt" class="accounts-checked">กำลังโหลดอีเมลที่รองรับ...</p>
         </div>
         <button id="closeAccountsBtn" class="modal-close" type="button" aria-label="ปิด">×</button>
       </header>
 
       <div id="accountsHealthSummary" class="accounts-health-summary">
-        <div><strong id="readyCount">—</strong><span>พร้อมใช้</span></div>
-        <div><strong id="errorCount">—</strong><span>มีปัญหา</span></div>
+        <div><strong id="readyCount">—</strong><span>รองรับ</span></div>
+        <div><strong id="errorCount">0</strong><span>กำลังตรวจ</span></div>
         <div><strong id="totalCount">—</strong><span>ทั้งหมด</span></div>
       </div>
 
@@ -132,12 +132,19 @@
       </div>
       <p id="accountsSearchResult" class="accounts-search-result hidden"></p>
 
+      <div class="accounts-copy-toolbar">
+        <button id="copyAllAccountsBtn" class="copy-all-accounts-btn" type="button">
+          <span class="copy-all-icon" aria-hidden="true">⧉</span>
+          <span id="copyAllAccountsText">คัดลอกอีเมลทั้งหมด</span>
+        </button>
+      </div>
+
       <div id="accountsList" class="accounts-list">
         <div class="accounts-loading">กำลังโหลดสถานะบัญชี...</div>
       </div>
 
-      <button id="refreshAccountsBtn" class="secondary-btn full accounts-refresh" type="button">อัปเดตสถานะล่าสุด</button>
-      <p class="accounts-note">สถานะ IMAP จะตรวจอัตโนมัติเมื่อเปิดบอท</p>
+      <button id="refreshAccountsBtn" class="secondary-btn full accounts-refresh" type="button">โหลดรายการอีกครั้ง</button>
+      <p class="accounts-note">สถานะ IMAP จะตรวจอัตโนมัติ</p>
     </div>
   </section>
 
@@ -151,7 +158,7 @@
     </div>
   </section>
 
-  <script src="./config.js?v=responsive-v9"></script>
-  <script src="./app.js?v=responsive-v9" defer></script>
+  <script src="./config.js?v=on-demand-v14"></script>
+  <script src="./app.js?v=on-demand-v14" defer></script>
 </body>
 </html>

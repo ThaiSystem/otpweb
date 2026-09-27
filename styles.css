@@ -1572,3 +1572,341 @@ footer{margin-top:clamp(18px,4vw,28px);gap:8px;font-size:var(--text-xs);line-hei
 @media (max-height:620px) and (orientation:landscape){.shell{min-height:auto;padding-top:10px;padding-bottom:10px;place-items:start center}.panel{padding-top:18px;padding-bottom:18px}.lead{margin-top:12px}.service-strip{margin-bottom:15px}.accounts-modal-card{max-height:95svh}}
 :where(button,a,input):focus-visible{outline:3px solid rgba(213,29,44,.20);outline-offset:2px}
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+
+
+/* NO OTP V11 */
+.result-card.not-found {
+  border-color: rgba(196, 97, 30, .16) !important;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(234, 144, 70, .09), transparent 14rem),
+    linear-gradient(145deg, #fffaf5, #fff5ea) !important;
+  box-shadow: 0 15px 38px rgba(156, 91, 35, .06) !important;
+}
+.result-card.not-found .result-icon {
+  background: #fff0df !important;
+  color: #c16a22 !important;
+}
+.result-card.not-found .result-icon::before,
+.result-card.not-found .result-icon::after {
+  border-color: rgba(193, 106, 34, .12) !important;
+}
+.result-card.not-found .eyebrow { color: #b66727 !important; }
+.result-card.not-found #resultTitle { color: #5f3b21 !important; }
+.result-card.not-found #resultTime {
+  color: #9a6b45 !important;
+  max-width: 520px;
+  margin-inline: auto;
+  line-height: 1.7;
+}
+
+
+/* ============================================================
+   CUTE + SMOOTH REALTIME V12
+   ============================================================ */
+:root {
+  --cute-rose: #ef4960;
+  --cute-rose-deep: #d91f39;
+  --cute-pink-soft: #fff1f4;
+  --cute-mint: #eaf8f1;
+  --cute-cream: #fffaf5;
+  --cute-shadow: 0 18px 55px rgba(65, 42, 45, .09);
+  --cute-ease: cubic-bezier(.22, 1, .36, 1);
+}
+
+body {
+  background:
+    radial-gradient(circle at 12% 12%, rgba(239,73,96,.10), transparent 24rem),
+    radial-gradient(circle at 88% 84%, rgba(44,166,111,.07), transparent 26rem),
+    linear-gradient(145deg, #fffdfc, #f6f1ef 58%, #efeae7);
+}
+
+.panel {
+  border: 1px solid rgba(255,255,255,.88);
+  background:
+    linear-gradient(160deg, rgba(255,255,255,.96), rgba(255,255,255,.86));
+  box-shadow:
+    0 32px 90px rgba(51,37,40,.10),
+    inset 0 1px 0 rgba(255,255,255,.95);
+  backdrop-filter: blur(24px) saturate(125%);
+  -webkit-backdrop-filter: blur(24px) saturate(125%);
+}
+
+.brand-mark {
+  box-shadow:
+    inset -8px 0 0 rgba(239,73,96,.95),
+    0 14px 30px rgba(28,24,25,.15);
+}
+
+.eyebrow {
+  letter-spacing: .16em;
+}
+
+.online-pill {
+  background: linear-gradient(180deg, #f1fbf6, #e8f8ef);
+  border: 1px solid rgba(31,151,94,.09);
+  box-shadow: 0 7px 18px rgba(31,151,94,.06);
+}
+
+.primary-btn {
+  background:
+    linear-gradient(135deg, #f25368 0%, #e52943 48%, #ca1730 100%);
+  box-shadow:
+    0 14px 30px rgba(220,31,55,.20),
+    inset 0 1px 0 rgba(255,255,255,.25);
+  transition:
+    transform .18s var(--cute-ease),
+    box-shadow .25s var(--cute-ease),
+    filter .18s ease;
+}
+
+.primary-btn:hover {
+  transform: translateY(-2px) scale(1.003);
+  filter: saturate(1.05);
+  box-shadow:
+    0 18px 38px rgba(220,31,55,.26),
+    inset 0 1px 0 rgba(255,255,255,.25);
+}
+
+.primary-btn:active {
+  transform: translateY(0) scale(.985);
+}
+
+.input-wrap {
+  border-radius: 18px;
+}
+
+.input-wrap input {
+  background: rgba(255,255,255,.78);
+  border-color: rgba(224,217,214,.90);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.95);
+}
+
+.input-wrap input:focus {
+  background: #fff;
+  border-color: rgba(239,73,96,.38);
+  box-shadow:
+    0 0 0 4px rgba(239,73,96,.07),
+    0 12px 28px rgba(53,37,40,.05);
+}
+
+.state-card,
+.result-card {
+  transition:
+    opacity .25s var(--cute-ease),
+    transform .28s var(--cute-ease),
+    box-shadow .28s var(--cute-ease);
+}
+
+.state-card:not(.hidden),
+.result-card:not(.hidden) {
+  animation: cuteCardIn .42s var(--cute-ease) both;
+}
+
+@keyframes cuteCardIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.loader-ring {
+  border-top-color: var(--cute-rose) !important;
+  border-right-color: rgba(239,73,96,.42) !important;
+  box-shadow: 0 0 0 6px rgba(239,73,96,.035);
+}
+
+.progress-bar {
+  background: linear-gradient(90deg, #f66d7f, #e82f48, #c91731);
+  box-shadow: 0 0 15px rgba(232,47,72,.18);
+}
+
+.cancel-btn {
+  background: linear-gradient(180deg, #fff, #fff7f8);
+  border-color: rgba(239,73,96,.16);
+}
+
+.cancel-btn:hover {
+  background: #fff0f3;
+  border-color: rgba(239,73,96,.28);
+}
+
+.accounts-btn {
+  background:
+    linear-gradient(145deg, rgba(255,255,255,.95), rgba(250,248,247,.90));
+  box-shadow: 0 8px 22px rgba(50,38,41,.05);
+}
+
+.account-health-row {
+  transition:
+    transform .18s var(--cute-ease),
+    background .18s ease,
+    border-color .18s ease;
+}
+
+.account-health-row:hover {
+  transform: translateY(-1px);
+}
+
+.account-health-row.ready {
+  background: linear-gradient(145deg, #ffffff, #f8fcfa);
+}
+
+.account-health-row.error {
+  background: linear-gradient(145deg, #ffffff, #fff8f8);
+}
+
+.accounts-checked.live::before {
+  content: "";
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: #2eaa70;
+  box-shadow: 0 0 0 0 rgba(46,170,112,.28);
+  animation: cuteLivePulse 2.1s ease-out infinite;
+}
+
+@keyframes cuteLivePulse {
+  0% { box-shadow: 0 0 0 0 rgba(46,170,112,.28); }
+  70%,100% { box-shadow: 0 0 0 8px rgba(46,170,112,0); }
+}
+
+footer {
+  opacity: .78;
+}
+
+@media (max-width: 620px) {
+  .panel {
+    border-radius: 24px;
+  }
+
+  .primary-btn,
+  .cancel-btn,
+  .secondary-btn {
+    border-radius: 15px;
+  }
+
+  .state-card,
+  .result-card {
+    border-radius: 20px;
+  }
+}
+
+
+/* COPY SUPPORTED EMAILS V13 */
+.accounts-copy-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin: 2px 0 10px;
+}
+.copy-all-accounts-btn {
+  min-height: 36px;
+  padding: 7px 11px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 1px solid rgba(213,29,44,.12);
+  border-radius: 12px;
+  background: linear-gradient(180deg, #fff, #fff7f8);
+  color: #b42336;
+  cursor: pointer;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 800;
+  transition: transform .16s ease, background .16s ease, border-color .16s ease, box-shadow .2s ease;
+}
+.copy-all-accounts-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: rgba(213,29,44,.24);
+  background: #fff0f3;
+  box-shadow: 0 7px 18px rgba(213,29,44,.07);
+}
+.copy-all-accounts-btn:active:not(:disabled) { transform: scale(.975); }
+.copy-all-accounts-btn:disabled { opacity: .45; cursor: not-allowed; }
+.copy-all-accounts-btn.copied {
+  border-color: rgba(36,158,99,.18);
+  background: #eefaf3;
+  color: #167348;
+}
+.copy-all-icon { font-size: 14px; line-height: 1; }
+
+.account-email-line {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.account-email-line > strong {
+  min-width: 0;
+  flex: 1;
+}
+.account-copy-btn {
+  min-height: 26px;
+  padding: 4px 7px;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid #e7e3df;
+  border-radius: 8px;
+  background: #faf9f8;
+  color: #737278;
+  cursor: pointer;
+  font: inherit;
+  font-size: 8.5px;
+  font-weight: 800;
+  line-height: 1;
+  transition: transform .14s ease, background .14s ease, border-color .14s ease, color .14s ease;
+}
+.account-copy-btn:hover {
+  transform: translateY(-1px);
+  border-color: rgba(213,29,44,.20);
+  background: #fff3f5;
+  color: #b42336;
+}
+.account-copy-btn:active { transform: scale(.96); }
+.account-copy-btn.copied {
+  border-color: rgba(36,158,99,.16);
+  background: #eefaf3;
+  color: #167348;
+}
+.account-copy-btn > span:first-child { font-size: 11px; }
+
+@media (max-width: 520px) {
+  .accounts-copy-toolbar { justify-content: stretch; }
+  .copy-all-accounts-btn { width: 100%; min-height: 39px; }
+  .account-email-line { align-items: flex-start; }
+  .account-copy-btn { min-height: 28px; }
+}
+
+
+/* ============================================================
+   ON-DEMAND MODE V14
+   ============================================================ */
+.accounts-checked.live {
+  color: #25885b;
+}
+
+.accounts-checked.live::before {
+  background: #45b87b;
+}
+
+.account-health-row.ready .account-health-message {
+  color: #567064;
+}
+
+.account-health-row.ready .account-health-lastmail {
+  color: #8a8b90;
+}
+
+.on-demand-hint {
+  color: #76767b;
+  font-size: 11px;
+  line-height: 1.6;
+}
