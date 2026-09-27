@@ -6,7 +6,7 @@
   <meta name="color-scheme" content="light">
   <meta name="referrer" content="no-referrer">
   <title>Netflix OTP Center</title>
-  <link rel="stylesheet" href="./styles.css?v=on-demand-v14">
+  <link rel="stylesheet" href="./styles.css?v=bot-status-v18-2">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -28,7 +28,7 @@
           <h1 id="page-title">ค้นหาข้อความ Netflix</h1>
         </div>
         <div class="bot-actions">
-          <span class="online-pill">BOT ONLINE</span>
+          <span class="online-pill" id="botStatusBadge">BOT CHECKING</span>
           <button id="accountsBtn" class="accounts-btn accounts-btn-medium" type="button">
             <span class="accounts-btn-icon" aria-hidden="true">✓</span>
             <span class="accounts-btn-copy">
@@ -151,14 +151,14 @@
   <section id="botOffline">
     <div class="offline-card">
       <div class="offline-icon">⚠️</div>
-      <h2>ขณะนี้บอทไม่ทำงาน</h2>
+      <h2>ระบบยังไม่ตอบสนอง</h2>
       <p>ระบบยังไม่พร้อมให้บริการในขณะนี้ โปรดติดต่อทีมงาน หรือลองใหม่อีกครั้งภายหลัง</p>
       <div class="offline-status"><span class="offline-pulse"></span><span id="offlineStatusText">กำลังตรวจสอบสถานะบอท...</span></div>
       <button id="offlineRetryBtn" class="offline-retry" type="button">ตรวจสอบอีกครั้ง</button>
     </div>
   </section>
 
-  <script src="./config.js?v=on-demand-v14"></script>
-  <script src="./app.js?v=on-demand-v14" defer></script>
+  <script src="./config.js?v=bot-status-v18-2"></script>
+  <script src="./app.js?v=bot-status-v18-2" defer></script>
 </body>
 </html>

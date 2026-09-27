@@ -2,9 +2,9 @@
   const cfg = window.JOKEMOO_CONFIG || {};
   const PROJECT_ID = String(cfg.projectId || "").trim();
   const SEARCH_SECONDS = Number(cfg.searchSeconds || 25);
-  const OFFLINE_AFTER_MS = Number(cfg.offlineAfterMs || 30000);
+  const OFFLINE_AFTER_MS = Number(cfg.offlineAfterMs || 180000);
   const STATUS_CHECK_MS = Number(cfg.statusCheckMs || 10000);
-  const REQUEST_POLL_MS = Number(cfg.requestPollMs || 1000);
+  const REQUEST_POLL_MS = Number(cfg.requestPollMs || 3000);
 
   const DOC_BASE = `https://firestore.googleapis.com/v1/projects/${encodeURIComponent(PROJECT_ID)}/databases/(default)/documents`;
   const STATUS_URL = `${DOC_BASE}/bot_system/status`;
@@ -34,6 +34,7 @@
   const newSearchBtn = $("newSearchBtn");
   const footerStatus = $("footerStatus");
   const statusDot = $("statusDot");
+  const botStatusBadge = $("botStatusBadge");
 
   const botOffline = $("botOffline");
   const offlineStatusText = $("offlineStatusText");
@@ -154,48 +155,48 @@
     }
   }
 
-  function showBotOffline(message) {
-    botOnline = false;
-    botOffline.classList.remove("hidden");
-    offlineStatusText.textContent = message || "ไม่พบบอทออนไลน์";
-    footerStatus.textContent = "บอทออฟไลน์";
-    statusDot.classList.add("offline");
-    document.documentElement.style.overflow = "hidden";
-  }
-
   function showBotOnline(accountCount) {
     botOnline = true;
     botOffline.classList.add("hidden");
-    latestAccountCount = Number.isFinite(accountCount) ? accountCount : 0;
-    const suffix = latestAccountCount ? ` · ${latestAccountCount} บัญชี` : "";
-    footerStatus.textContent = `บอทออนไลน์${suffix}`;
-    if (accountsMiniCount) {
-      accountsMiniCount.textContent = latestAccountCount ? `${latestAccountCount} บัญชี · กดดูสถานะ` : "กดดูสถานะบัญชี";
-    }
-    statusDot.classList.remove("offline");
     document.documentElement.style.overflow = "";
+    statusDot.classList.remove("offline");
+
+    if (botStatusBadge) {
+      botStatusBadge.textContent = "BOT ONLINE";
+      botStatusBadge.classList.remove("offline", "checking");
+      botStatusBadge.classList.add("online");
+      botStatusBadge.title = "Heartbeat ล่าสุดยังสด · คลิกเพื่อเช็กสถานะอีกครั้ง";
+    }
+
+    const count = Number(accountCount || latestAccountCount || 0);
+    footerStatus.textContent =
+      count
+        ? `พร้อมใช้งาน · ${count} บัญชี`
+        : "พร้อมใช้งาน · ตรวจเมลเมื่อกดค้นหา";
+  }
+
+  function showBotOffline(message) {
+    botOnline = false;
+    botOffline.classList.add("hidden");
+    document.documentElement.style.overflow = "";
+    statusDot.classList.add("offline");
+
+    if (botStatusBadge) {
+      botStatusBadge.textContent = "BOT OFFLINE";
+      botStatusBadge.classList.remove("online", "checking");
+      botStatusBadge.classList.add("offline");
+      botStatusBadge.title = "ไม่พบ heartbeat ใหม่ภายใน 3 นาที · คลิกเพื่อเช็กอีกครั้ง";
+    }
+
+    footerStatus.textContent =
+      message || "บอทยังไม่ตอบสนอง";
   }
 
   async function checkBotStatus() {
-    if (
-      Date.now()
-      < firestoreQuotaCooldownUntil
-    ) {
-      const minutes = Math.max(
-        1,
-        Math.ceil(
-          (
-            firestoreQuotaCooldownUntil
-            - Date.now()
-          ) / 60000
-        )
-      );
-
-      showBotOffline(
-        `Firestore quota เต็ม · พักการตรวจอีก ${minutes} นาที`
-      );
-
-      return false;
+    if (botStatusBadge) {
+      botStatusBadge.textContent = "BOT CHECKING";
+      botStatusBadge.classList.remove("online", "offline");
+      botStatusBadge.classList.add("checking");
     }
 
     try {
@@ -233,9 +234,8 @@
       }
 
       showBotOffline(
-        "บอทไม่ได้ส่งสัญญาณล่าสุด โปรดติดต่อทีมงาน"
+        "BOT OFFLINE · ไม่พบ heartbeat ใหม่ภายใน 3 นาที"
       );
-
       return false;
 
     } catch (err) {
@@ -245,25 +245,34 @@
           String(err?.message || "")
         )
       ) {
-        firestoreQuotaCooldownUntil =
-          Date.now()
-          + FIRESTORE_QUOTA_COOLDOWN_MS;
+        if (botStatusBadge) {
+          botStatusBadge.textContent = "BOT ?";
+          botStatusBadge.classList.remove("online", "offline");
+          botStatusBadge.classList.add("checking");
+          botStatusBadge.title = "เช็กสถานะไม่ได้ชั่วคราวเพราะ Firestore quota";
+        }
 
-        showBotOffline(
-          "Firestore quota เต็มชั่วคราว · ระบบพักการตรวจ 10 นาที"
-        );
+        footerStatus.textContent =
+          "เช็กสถานะบอทไม่ได้ชั่วคราว";
 
         return false;
       }
 
-      console.error(
-        "BOT STATUS ERROR",
-        err
-      );
+      console.error("BOT STATUS ERROR", err);
 
-      showBotOffline(
-        "ไม่สามารถเชื่อมต่อระบบสถานะบอทได้"
-      );
+      if (err?.status === 403) {
+        showBotOffline(
+          "Firestore Rules ยังไม่อนุญาตให้อ่านสถานะ"
+        );
+      } else if (err?.status === 404) {
+        showBotOffline(
+          "ยังไม่พบเอกสารสถานะบอท กรุณาเปิดบอทก่อน"
+        );
+      } else {
+        showBotOffline(
+          "เช็กสถานะบอทไม่สำเร็จ"
+        );
+      }
 
       return false;
     }
@@ -842,11 +851,6 @@
     setNotice("");
     hide(resultCard);
 
-    if (!botOnline) {
-      showBotOffline("ขณะนี้บอทไม่ทำงาน โปรดติดต่อทีมงาน");
-      return;
-    }
-
     const email = emailInput.value.trim().toLowerCase();
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       setNotice("กรุณากรอกอีเมลให้ถูกต้อง");
@@ -862,6 +866,9 @@
     searchBtn.disabled = true;
     searchBtn.classList.add("is-loading");
     try {
+      // V17: do not read bot_system/status.
+      // Create the request immediately. If the bot is offline, the request
+      // will simply time out after 25 seconds without blocking the page.
       const createdRequestId = await createRequest(email);
 
       if (thisSearchSerial !== searchSerial) {
@@ -1021,10 +1028,22 @@
     }
   });
 
-  offlineRetryBtn.addEventListener("click", checkBotStatus);
+  offlineRetryBtn?.addEventListener("click", () => {
+    botOffline.classList.add("hidden");
+    document.documentElement.style.overflow = "";
+    setNotice("พร้อมใช้งาน กรุณากดค้นหาอีกครั้ง");
+  });
 
-  // Lock page until the first live heartbeat is confirmed.
-  showBotOffline("กำลังตรวจสอบสถานะบอท...");
+  // V18 LOW-COST BOT STATUS:
+  // Read bot status ONCE when the page opens.
+  // No automatic polling interval is used.
+  botOnline = false;
+  botOffline.classList.add("hidden");
+  document.documentElement.style.overflow = "";
+  footerStatus.textContent = "กำลังเช็กสถานะบอท...";
   checkBotStatus();
-  setInterval(checkBotStatus, STATUS_CHECK_MS);
+
+  botStatusBadge?.addEventListener("click", () => {
+    checkBotStatus();
+  });
 })();

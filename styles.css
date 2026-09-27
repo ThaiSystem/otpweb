@@ -1910,3 +1910,73 @@ footer {
   font-size: 11px;
   line-height: 1.6;
 }
+
+
+/* ULTRA LOW READS V16 */
+footer #footerStatus {
+  transition: color .2s ease, opacity .2s ease;
+}
+
+
+/* ============================================================
+   NO-BLOCK V17
+   ============================================================ */
+#botOffline {
+  display: none !important;
+}
+
+body {
+  overflow-y: auto !important;
+}
+
+#footerStatus {
+  transition: opacity .2s ease, color .2s ease;
+}
+
+
+/* ============================================================
+   LOW-COST BOT STATUS BADGE V18
+   ============================================================ */
+#botStatusBadge {
+  cursor: pointer;
+  user-select: none;
+  transition:
+    background .18s ease,
+    color .18s ease,
+    border-color .18s ease,
+    transform .16s ease,
+    box-shadow .18s ease;
+}
+
+#botStatusBadge:hover {
+  transform: translateY(-1px);
+}
+
+#botStatusBadge.online {
+  color: #14794b;
+  background: linear-gradient(180deg, #effbf5, #e6f8ee);
+  border-color: rgba(31,151,94,.13);
+  box-shadow: 0 6px 18px rgba(31,151,94,.06);
+}
+
+#botStatusBadge.offline {
+  color: #b53a45;
+  background: linear-gradient(180deg, #fff4f5, #ffebee);
+  border-color: rgba(194,55,69,.13);
+  box-shadow: 0 6px 18px rgba(194,55,69,.06);
+}
+
+#botStatusBadge.checking {
+  color: #8a6a2d;
+  background: linear-gradient(180deg, #fffaf0, #fff4db);
+  border-color: rgba(176,126,37,.12);
+}
+
+#botStatusBadge.checking::before {
+  animation: botBadgePulse 1.2s ease-in-out infinite;
+}
+
+@keyframes botBadgePulse {
+  0%, 100% { opacity: .45; }
+  50% { opacity: 1; }
+}
